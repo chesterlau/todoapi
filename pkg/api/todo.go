@@ -2,9 +2,9 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"time"
+	"todo/pkg/db"
 	"todo/pkg/model"
 
 	"github.com/go-redis/redis/v8"
@@ -21,9 +21,9 @@ func GetTodos(c echo.Context) error {
 func GetTodoById(c echo.Context) error {
 	id := c.Param("id")
 
-	rd := c.Get("Redis").(*redis.Client)
+	d := c.Get("Db").(db.Database)
 
-	val, err := rd.Get(ctx, id).Result()
+	t, err := d.GetTodo(id)
 
 	if err != nil {
 		if err == redis.Nil {
@@ -32,18 +32,6 @@ func GetTodoById(c echo.Context) error {
 			panic(err)
 		}
 	}
-
-	// t := model.Todo{
-	// 	Id:          new(string),
-	// 	CreatedTime: new(time.Time),
-	// }
-
-	// *t.Id = uuid.New().String()
-	// *t.CreatedTime = time.Now().UTC()
-
-	var t model.Todo
-
-	json.Unmarshal([]byte(val), &t)
 
 	return c.JSON(http.StatusOK, t)
 }
@@ -51,9 +39,9 @@ func GetTodoById(c echo.Context) error {
 func UpdateTodo(c echo.Context) error {
 	id := c.Param("id")
 
-	rd := c.Get("Redis").(*redis.Client)
+	d := c.Get("Db").(db.Database)
 
-	val, err := rd.Get(ctx, id).Result()
+	existingTodo, err := d.GetTodo(id)
 
 	if err != nil {
 		if err == redis.Nil {
@@ -62,10 +50,6 @@ func UpdateTodo(c echo.Context) error {
 			panic(err)
 		}
 	}
-
-	var existingTodo model.Todo
-
-	json.Unmarshal([]byte(val), &existingTodo)
 
 	updatedTodo := new(model.Todo)
 
@@ -87,13 +71,7 @@ func UpdateTodo(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	b, err := json.Marshal(existingTodo)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	err = rd.Set(ctx, *existingTodo.Id, b, time.Minute*5).Err() //Cache data for 5 minutes
+	err = d.AddTodo(id, existingTodo)
 
 	if err != nil {
 		panic(err)
@@ -120,15 +98,9 @@ func AddTodo(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	b, err := json.Marshal(*t)
+	d := c.Get("Db").(db.Database)
 
-	if err != nil {
-		panic(err.Error())
-	}
-
-	rd := c.Get("Redis").(*redis.Client)
-
-	err = rd.Set(ctx, *t.Id, b, time.Minute*5).Err() //Cache data for 5 minutes
+	err := d.AddTodo(*t.Id, *t)
 
 	if err != nil {
 		panic(err)

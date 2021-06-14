@@ -25,8 +25,13 @@ func Init() *echo.Echo {
 	e := echo.New()
 
 	//Custom middleware
-	db := db.Init()
-	e.Use(middleware.RedisHandler(db))
+	r := db.Redis{
+		Address: "127.0.0.1:6379",
+	}
+
+	r.Init()
+
+	e.Use(middleware.RedisHandler(r))
 
 	v := validator.New()
 	e.Validator = &CustomValidator{v}

@@ -1,19 +1,20 @@
 package middleware
 
 import (
-	"github.com/go-redis/redis/v8"
+	"todo/pkg/db"
+
 	"github.com/labstack/echo/v4"
 )
 
 const (
-	TxKey = "Redis"
+	TxKey = "Db"
 )
 
-func RedisHandler(redis *redis.Client) echo.MiddlewareFunc {
+func RedisHandler(d db.Database) echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return echo.HandlerFunc(func(c echo.Context) error {
-			c.Set(TxKey, redis)
+			c.Set(TxKey, d)
 
 			return next(c)
 		})
