@@ -59,6 +59,13 @@ func (r Redis) GetTodo(id string) (model.Todo, error) {
 	return t, nil
 }
 
-func (r Redis) DeleteTodo() {
-	//Not implemented
+func (r Redis) DeleteTodo(id string) (int64, error) {
+
+	val, err := client.Del(ctx, id).Result()
+
+	if err != nil {
+		return 0, err
+	}
+
+	return val, nil
 }

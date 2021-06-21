@@ -40,6 +40,7 @@ func Init() *echo.Echo {
 	e.GET("/todos/:id", api.GetTodoById)
 	e.POST("/todos", api.AddTodo)
 	e.PUT("/todos/:id", api.UpdateTodo)
+	e.DELETE("/todos/:id", api.DeleteTodo)
 
 	return e
 }

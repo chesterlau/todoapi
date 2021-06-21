@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"time"
 	"todo/pkg/db"
@@ -11,8 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
-
-var ctx = context.Background()
 
 func GetTodos(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Todos")
@@ -81,7 +78,6 @@ func UpdateTodo(c echo.Context) error {
 }
 
 func AddTodo(c echo.Context) error {
-
 	t := new(model.Todo)
 
 	if err := c.Bind(&t); err != nil {
@@ -107,4 +103,28 @@ func AddTodo(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, t)
+}
+
+func DeleteTodo(c echo.Context) error {
+	id := c.Param("id")
+
+	d := c.Get("Db").(db.Database)
+
+	_, err := d.GetTodo(id)
+
+	if err != nil {
+		if err == redis.Nil {
+			return echo.NewHTTPError(http.StatusNotFound, "No todo item found")
+		} else {
+			panic(err)
+		}
+	}
+
+	_, err = d.DeleteTodo(id)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return c.JSON(http.StatusOK, "Todo item deleted")
 }
