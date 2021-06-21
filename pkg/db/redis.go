@@ -59,6 +59,34 @@ func (r Redis) GetTodo(id string) (model.Todo, error) {
 	return t, nil
 }
 
+func (r Redis) GetTodos() ([]model.Todo, error) {
+
+	val, err := client.Keys(ctx, "*").Result()
+
+	ts := make([]model.Todo, 0)
+
+	if err != nil {
+		return ts, err
+	}
+
+	for _, key := range val {
+
+		var t model.Todo
+
+		v, err := client.Get(ctx, key).Result()
+
+		if err != nil {
+			return ts, err
+		}
+
+		json.Unmarshal([]byte(v), &t)
+
+		ts = append(ts, t)
+	}
+
+	return ts, nil
+}
+
 func (r Redis) DeleteTodo(id string) (int64, error) {
 
 	val, err := client.Del(ctx, id).Result()

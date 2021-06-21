@@ -12,7 +12,20 @@ import (
 )
 
 func GetTodos(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Todos")
+
+	d := c.Get("Db").(db.Database)
+
+	ts, err := d.GetTodos()
+
+	if err != nil {
+		if err == redis.Nil {
+			return echo.NewHTTPError(http.StatusNotFound, "No todo item found")
+		} else {
+			panic(err)
+		}
+	}
+
+	return c.JSON(http.StatusOK, ts)
 }
 
 func GetTodoById(c echo.Context) error {
