@@ -20,8 +20,8 @@ func (r Redis) Init() {
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     r.Address,
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: "",
+		DB:       0, // use default DB
 	})
 
 	client = rdb
